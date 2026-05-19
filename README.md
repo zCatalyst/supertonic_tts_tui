@@ -4,6 +4,8 @@ A TUI-styled web frontend for voice synthesis powered by [Supertonic 3](https://
 
 Type a message and hear it spoken aloud, or switch to AI mode for a full conversational experience with streaming replies and voice synthesis.
 
+![Aura Screenshot](ss1.png)
+
 ## Features
 
 ### TTS Mode
