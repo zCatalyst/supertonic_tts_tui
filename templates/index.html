@@ -239,7 +239,7 @@
         <div class="statusbar">
             <span class="mode" id="sbMode">normal</span>
             <span class="sep">│</span>
-            <span id="sbName">jarvis</span>
+            <span id="sbName">aura</span>
             <span class="sep">│</span>
             <span id="sbVoice">m1</span>
             <span class="sep">│</span>
@@ -277,7 +277,7 @@
                     <div class="sidebar-content">
                         <div class="name-row">
                             <span class="name-label">set</span>
-                            <input class="name-input" id="nameInput" placeholder="name">
+                            <input class="name-input" id="nameInput" placeholder="aura">
                         </div>
                     </div>
                 </div>
@@ -834,10 +834,10 @@
             cfg = { ...data };
             delete cfg.voices;
 
-            assistantName = (cfg.name || 'jarvis').toLowerCase();
+            assistantName = (cfg.name || 'aura').toLowerCase();
             textSpeed = cfg.text_speed || 20;
 
-            nameInput.value = cfg.name || 'jarvis';
+            nameInput.value = cfg.name || 'aura';
             cfgLang.value = cfg.lang;
             cfgSteps.value = cfg.steps;
             cfgSpeed.value = cfg.speed;
@@ -852,7 +852,7 @@
 
         nameInput.addEventListener('blur', async () => {
             const name = nameInput.value.trim();
-            if (!name || name.toLowerCase() === assistantName) { nameInput.value = cfg.name || 'jarvis'; return; }
+            if (!name || name.toLowerCase() === assistantName) { nameInput.value = cfg.name || 'aura'; return; }
             await fetch('/api/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

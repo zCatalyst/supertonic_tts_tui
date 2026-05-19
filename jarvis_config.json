@@ -1,0 +1,62 @@
+{
+  "name": "Nori",
+  "voice": "F2",
+  "lang": "en",
+  "steps": 8,
+  "speed": 1.05,
+  "text_speed": 20,
+  "theme": "nord",
+  "show_glyph": false,
+  "voices": {
+    "F1": {
+      "name": "Aria",
+      "gender": "Female",
+      "desc": "Warm, conversational"
+    },
+    "F2": {
+      "name": "Luna",
+      "gender": "Female",
+      "desc": "Soft, gentle"
+    },
+    "F3": {
+      "name": "Nova",
+      "gender": "Female",
+      "desc": "Bright, energetic"
+    },
+    "F4": {
+      "name": "Sage",
+      "gender": "Female",
+      "desc": "Calm, professional"
+    },
+    "F5": {
+      "name": "Iris",
+      "gender": "Female",
+      "desc": "Deep, authoritative"
+    },
+    "M1": {
+      "name": "Jarvis",
+      "gender": "Male",
+      "desc": "Classic, sophisticated"
+    },
+    "M2": {
+      "name": "Atlas",
+      "gender": "Male",
+      "desc": "Deep, commanding"
+    },
+    "M3": {
+      "name": "Orion",
+      "gender": "Male",
+      "desc": "Smooth, friendly"
+    },
+    "M4": {
+      "name": "Echo",
+      "gender": "Male",
+      "desc": "Clear, neutral"
+    },
+    "M5": {
+      "name": "Titan",
+      "gender": "Male",
+      "desc": "Rich, resonant"
+    }
+  }
+}

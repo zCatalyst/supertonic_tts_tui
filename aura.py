@@ -21,7 +21,7 @@ DEFAULT_VOICES = {
 }
 
 DEFAULT_CONFIG = {
-    "name": "JARVIS",
+    "name": "AURA",
     "voice": "M1",
     "lang": "en",
     "steps": 8,
@@ -32,7 +32,7 @@ DEFAULT_CONFIG = {
     "voices": DEFAULT_VOICES,
 }
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "jarvis_config.json")
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "aura_config.json")
 
 def load_config():
     if os.path.exists(CONFIG_PATH):
@@ -145,7 +145,7 @@ def reset_config():
     global config, voice_style, voices
     voices = {k: dict(v) for k, v in DEFAULT_VOICES.items()}
     config = {
-        "name": "JARVIS",
+        "name": "AURA",
         "voice": "M1",
         "lang": "en",
         "steps": 8,

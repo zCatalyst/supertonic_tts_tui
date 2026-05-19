@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.wav
-jarvis_config.json
+aura_config.json
 .env
 .venv/
 venv/
