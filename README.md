@@ -78,17 +78,6 @@ Open **http://localhost:2998**
 5. Copy the key and paste it into the `api_key` field in the AI settings sidebar
 6. Click **save** — the app will automatically switch to AI mode
 
-### Popular Models on OpenRouter
-
-| Provider | Model ID |
-|---|---|
-| Anthropic Claude Sonnet 4 | `anthropic/claude-sonnet-4-20250514` |
-| Anthropic Claude Opus 4 | `anthropic/claude-opus-4-20250514` |
-| OpenAI GPT-4o | `openai/gpt-4o` |
-| Google Gemini 2.5 Pro | `google/gemini-2.5-pro` |
-| DeepSeek V4 Flash (free) | `deepseek/deepseek-v4-flash:free` |
-| Meta Llama 4 Maverick | `meta-llama/llama-4-maverick` |
-
 Browse all available models at [openrouter.ai/models](https://openrouter.ai/models)
 
 ### Config File
