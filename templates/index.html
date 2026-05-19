@@ -45,10 +45,13 @@
             font-size: 11px; color: var(--text-muted); gap: 8px; user-select: none;
         }
 
-        .statusbar .mode { color: var(--accent); font-weight: 500; }
+        .statusbar .mode { color: var(--accent); font-weight: 500; cursor: pointer; padding: 0 4px; border-radius: 2px; }
+        .statusbar .mode:hover { color: var(--accent-bright); background: var(--surface); }
+        .statusbar .mode.ai-mode { color: var(--green-bright); }
         .statusbar .sep { color: var(--border-light); }
         .statusbar .right { margin-left: auto; display: flex; gap: 12px; }
         .statusbar .state { color: var(--green); }
+        .statusbar .tokens { color: var(--cool); font-size: 10px; }
 
         .main { flex: 1; display: flex; overflow: hidden; }
 
@@ -60,8 +63,8 @@
         .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
         .ascii-area {
-            padding: 4px 16px;
-            min-height: 120px;
+            padding: 8px 16px;
+            min-height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -85,16 +88,37 @@
 
         .ascii-art {
             white-space: pre;
-            font-size: 10px;
-            line-height: 1.15;
+            font-size: 12px;
+            line-height: 1.25;
             color: var(--text-dim);
             text-align: center;
-            transition: color 0.8s ease;
+            transition: color 0.4s ease, text-shadow 0.4s ease;
         }
 
-        .ascii-art.talking { color: var(--green); }
-        .ascii-art.thinking { color: var(--accent); }
-        .ascii-art.idle { color: var(--text-muted); }
+        .ascii-art.talking {
+            color: var(--green-bright);
+            text-shadow: 0 0 8px var(--green), 0 0 16px rgba(168, 184, 152, 0.3);
+            animation: pulse-glow 0.6s ease-in-out infinite alternate;
+        }
+        .ascii-art.thinking {
+            color: var(--accent-bright);
+            text-shadow: 0 0 6px var(--accent);
+            animation: pulse-glow 0.8s ease-in-out infinite alternate;
+        }
+        .ascii-art.idle {
+            color: var(--text-muted);
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { opacity: 0.85; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.02); }
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.9; }
+        }
 
         .ascii-label {
             position: absolute;
@@ -227,6 +251,49 @@
         }
         .cfg-btn:hover { border-color: var(--text-dim); color: var(--text); }
         .cfg-btn.danger:hover { border-color: var(--warm); color: var(--warm); }
+        .session-list { padding: 0 10px; max-height: 150px; overflow-y: auto; }
+        .session-list::-webkit-scrollbar { width: 3px; }
+        .session-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .session-item {
+            display: flex; align-items: center; gap: 4px; padding: 2px 3px;
+            font-size: 10px; color: var(--text-muted); cursor: pointer;
+        }
+        .session-item:hover { color: var(--text); }
+        .session-item.active { color: var(--accent-bright); }
+        .session-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .session-count { font-size: 9px; color: var(--text-muted); }
+        .session-del {
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            font-size: 9px; padding: 0 2px; opacity: 0; transition: opacity 0.1s;
+        }
+        .session-item:hover .session-del { opacity: 1; }
+        .session-del:hover { color: var(--warm); }
+        .session-new {
+            display: flex; align-items: center; gap: 4px; padding: 2px 10px;
+        }
+        .session-new-btn {
+            flex: 1; background: var(--surface); border: 1px solid transparent;
+            color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; padding: 2px 5px; cursor: pointer; transition: all 0.1s;
+        }
+        .session-new-btn:hover { border-color: var(--green); color: var(--green); }
+        .ai-cfg-row { display: flex; align-items: center; gap: 4px; padding: 1px 0; }
+        .ai-cfg-key { color: var(--text-muted); font-size: 10px; min-width: 50px; }
+        .ai-cfg-val {
+            flex: 1; background: var(--surface); border: 1px solid transparent;
+            color: var(--text); font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; padding: 2px 4px; outline: none;
+        }
+        .ai-cfg-val:focus { border-color: var(--border-light); }
+        .ai-cfg-val.api-key { font-size: 9px; }
+        textarea.ai-cfg-val {
+            resize: vertical; min-height: 40px; max-height: 100px;
+            line-height: 1.4; width: 100%;
+        }
+        .token-badge {
+            display: inline-block; font-size: 9px; color: var(--cool);
+            padding: 1px 4px; margin-left: 4px;
+        }
         .boot { color: var(--text-muted); font-size: 11px; }
         .boot-line { padding: 0 16px; }
         .boot-ok { color: var(--green); }
@@ -237,14 +304,15 @@
 <body>
     <div class="app">
         <div class="statusbar">
-            <span class="mode" id="sbMode">normal</span>
+            <span class="mode" id="sbMode" onclick="toggleMode()">tts</span>
             <span class="sep">│</span>
             <span id="sbName">aura</span>
-            <span class="sep">│</span>
+            <span class="sep" id="sepVoice">│</span>
             <span id="sbVoice">m1</span>
-            <span class="sep">│</span>
+            <span class="sep" id="sepConfig">│</span>
             <span id="sbConfig">8·1.05</span>
             <div class="right">
+                <span class="tokens" id="sbTokens"></span>
                 <span class="state" id="sbState">idle</span>
             </div>
         </div>
@@ -272,6 +340,17 @@
             <div class="sidebar">
                 <div class="sidebar-section">
                     <div class="sidebar-header" onclick="toggleSection(this)">
+                        <span>sessions</span><span class="toggle">▾</span>
+                    </div>
+                    <div class="sidebar-content">
+                        <div class="session-new">
+                            <button class="session-new-btn" id="btnNewSession">+ new</button>
+                        </div>
+                        <div class="session-list" id="sessionList"></div>
+                    </div>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-header" onclick="toggleSection(this)">
                         <span>name</span><span class="toggle">▾</span>
                     </div>
                     <div class="sidebar-content">
@@ -287,6 +366,26 @@
                     </div>
                     <div class="sidebar-content">
                         <div class="voice-list" id="voiceList"></div>
+                    </div>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-header" onclick="toggleSection(this)">
+                        <span>ai</span><span class="toggle">▾</span>
+                    </div>
+                    <div class="sidebar-content">
+                        <div class="cfg-list">
+                            <div class="ai-cfg-row"><span class="ai-cfg-key">api_key</span><input class="ai-cfg-val api-key" id="cfgApiKey" type="password" placeholder="sk-or-..."></div>
+                            <div class="ai-cfg-row"><span class="ai-cfg-key">model</span><input class="ai-cfg-val" id="cfgModel" placeholder="anthropic/claude-sonnet-4"></div>
+                            <div class="ai-cfg-row"><span class="ai-cfg-key">temp</span><input class="ai-cfg-val" id="cfgTemp" type="number" step="0.1" min="0" max="2" value="0.7"></div>
+                            <div class="ai-cfg-row"><span class="ai-cfg-key">max_tok</span><input class="ai-cfg-val" id="cfgMaxTok" type="number" min="256" max="32768" value="4096"></div>
+                        </div>
+                        <div style="padding: 2px 10px;">
+                            <span class="ai-cfg-key" style="font-size:10px;color:var(--text-muted)">system</span>
+                            <textarea class="ai-cfg-val" id="cfgSystemPrompt" rows="3">You are a helpful AI assistant.</textarea>
+                        </div>
+                        <div class="cfg-actions">
+                            <button class="cfg-btn" id="btnSaveAi">save</button>
+                        </div>
                     </div>
                 </div>
                 <div class="sidebar-section">
@@ -414,8 +513,11 @@
         const sbMode = document.getElementById('sbMode');
         const sbName = document.getElementById('sbName');
         const sbVoice = document.getElementById('sbVoice');
+        const sepVoice = document.getElementById('sepVoice');
         const sbConfig = document.getElementById('sbConfig');
+        const sepConfig = document.getElementById('sepConfig');
         const sbState = document.getElementById('sbState');
+        const sbTokens = document.getElementById('sbTokens');
         const cfgLang = document.getElementById('cfgLang');
         const cfgGlyph = document.getElementById('cfgGlyph');
         const cfgSteps = document.getElementById('cfgSteps');
@@ -424,6 +526,14 @@
         const btnSave = document.getElementById('btnSave');
         const btnReset = document.getElementById('btnReset');
         const themeStyle = document.getElementById('themeStyle');
+        const sessionList = document.getElementById('sessionList');
+        const btnNewSession = document.getElementById('btnNewSession');
+        const cfgApiKey = document.getElementById('cfgApiKey');
+        const cfgModel = document.getElementById('cfgModel');
+        const cfgTemp = document.getElementById('cfgTemp');
+        const cfgMaxTok = document.getElementById('cfgMaxTok');
+        const cfgSystemPrompt = document.getElementById('cfgSystemPrompt');
+        const btnSaveAi = document.getElementById('btnSaveAi');
 
         let busy = false;
         let voices = {};
@@ -431,233 +541,144 @@
         let textSpeed = 20;
         let assistantName = 'jarvis';
         let asciiInterval = null;
+        let currentMode = 'tts';
+        let currentSessionId = null;
+        let sessions = [];
 
         // GLYPH MOTION - Living ASCII Art
         // Braille patterns + unicode glyphs for smooth organic motion
 
         const ASCII_IDLE_FRAMES = [
-`        ·   ·     ·   ·
-     ·       ◌       ·
-   ·    ·  ◌ ◌  ·    ·
-  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
-  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
-   ·    ·  ◌ ◌  ·    ·
-     ·       ◌       ·
-        ·   ·     ·   ·`,
-`        ·   ·     ·   ·
-     ·       ·       ·
-   ·    ·  ◌ ◌  ·    ·
-  ·  ◌  · ◌ ◌◌◌ ·  ◌  ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
-  ·  ◌  · ◌◌◌ ◌ ·  ◌  ·
-   ·    ·  ◌ ◌  ·    ·
-     ·       ·       ·
-        ·   ·     ·   ·`,
-`        ·   ·     ·   ·
-     ·       ·       ·
-   ·    ·  · ·  ·    ·
-  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
-  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
-   ·    ·  · ·  ·    ·
-     ·       ·       ·
-        ·   ·     ·   ·`,
-`        ·   ·     ·   ·
-     ·       ·       ·
-   ·    ·  · ·  ·    ·
-  ·  ·  · ◌ ◌◌◌ ·  ·  ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
-  ·  ·  · ◌◌◌ ◌ ·  ·  ·
-   ·    ·  · ·  ·    ·
-     ·       ·       ·
-        ·   ·     ·   ·`,
-`        ·   ·     ·   ·
-     ·       ·       ·
-   ·    ·  · ·  ·    ·
-  ·  ·  · ◌ ◌◌◌ ·  ·  ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
-  ·  ·  · ◌ ◌◌◌ ·  ·  ·
-   ·    ·  · ·  ·    ·
-     ·       ·       ·
-        ·   ·     ·   ·`,
-`        ·   ·     ·   ·
-     ·       ·       ·
-   ·    ·  · ·  ·    ·
-  ·  ·  · ◌◌◌ ◌ ·  ·  ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
- · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
- ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
-  ·  ·  · ◌◌◌◌◌ ·  ·  ·
-   ·    ·  · ·  ·    ·
-     ·       ·       ·
-        ·   ·     ·   ·`,
+`          ·  ·  ·
+        ·  ◌  ◌  ·
+       ·  ◌  ·  ◌  ·
+       ·  ◌  ·  ◌  ·
+        ·  ◌  ◌  ·
+          ·  ·  ·`,
+`          ·  ·  ·
+        ·  ◌  ◌  ·
+       ·  ◌  ·  ◌  ·
+       ·  ·  ◌  ·  ·
+        ·  ◌  ◌  ·
+          ·  ·  ·`,
+`          ·  ·  ·
+        ·  ·  ◌  ·
+       ·  ◌  ·  ◌  ·
+       ·  ◌  ·  ◌  ·
+        ·  ◌  ·  ·
+          ·  ·  ·`,
+`          ·  ·  ·
+        ·  ◌  ·  ·
+       ·  ◌  ·  ◌  ·
+       ·  ·  ◌  ◌  ·
+        ·  ◌  ◌  ·
+          ·  ·  ·`,
         ];
 
         const ASCII_THINKING_FRAMES = [
-`    ╭────────────────────╮
-    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
-    │  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁ │
-    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
-    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
-    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
-    │  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁ │
-    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
-    ╰────────────────────╯
-    ╰──┬────┬────┬────┬─╯
-       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
-       ╰────┴────┴────╯`,
-`    ╭────────────────────╮
-    │  ⠂  ⠄  ⠈  ⠐  ⠁  │
-    │ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  │
-    │  ⠄  ⠈  ⠐  ⠁  ⠂  │
-    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
-    │  ⠄  ⠈  ⠐  ⠁  ⠂  │
-    │ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  │
-    │  ⠂  ⠄  ⠈  ⠐  ⠁  │
-    ╰────────────────────╯
-    ╰──┬────┬────┬────┬─╯
-       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
-       ╰────┴────┴────╯`,
-`    ╭────────────────────╮
-    │ ⠄  ⠈  ⠐  ⠁  ⠂  │
-    │ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  ⠄ │
-    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
-    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
-    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
-    │ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  ⠄ │
-    │ ⠄  ⠈  ⠐  ⠁  ⠂  │
-    ╰────────────────────╯
-    ╰──┬────┬────┬────┬─╯
-       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
-       ╰────┴────┴────╯`,
-`    ╭────────────────────╮
-    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
-    │⠁⠁ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁ │
-    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
-    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
-    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
-    │⠁⠁ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁ │
-    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
-    ╰────────────────────╯
-    ╰──┬────┬────┬────┬─╯
-       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
-       ╰────┴────┴────╯`,
-`    ╭────────────────────╮
-    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
-    │ ⠄ ⠁⠁  ⠄ ⠁⠁⠁ ⠂  │
-    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
-    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
-    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
-    │ ⠄ ⠁⠁  ⠄ ⠁⠁⠁ ⠂  │
-    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
-    ╰────────────────────╯
-    ╰──┬────┬────┬────┬─╯
-       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
-       ╰────┴────┴────╯`,
-`    ╭────────────────────╮
-    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
-    │⠁  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁│
-    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
-    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
-    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
-    │⠁  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁│
-    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
-    ╰────────────────────╯
-    ╰──┬────┬────┬────┬─╯
-       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
-       ╰────┴────┴────╯`,
+`     ┌──────────────┐
+     │  ⠁⠂⠄  ⠈⠐⠁  │
+     │  ⠄⠁⠁  ⠂⠄⠁  │
+     │  ⠂⠄⠈  ⠐⠁⠂  │
+     │  ⠈⠐⠁  ⠂⠄⠈  │
+     │  ⠄⠁⠂  ⠄⠈⠐  │
+     │  ⠁⠂⠄  ⠈⠐⠁  │
+     └──────────────┘
+      ║  ║  ║  ║  ║
+      ╚══╩══╩══╩══╝`,
+`     ┌──────────────┐
+     │  ⠂⠄⠈  ⠐⠁⠂  │
+     │  ⠄⠈⠐  ⠁⠂⠄  │
+     │  ⠈⠐⠁  ⠂⠄⠈  │
+     │  ⠐⠁⠂  ⠄⠈⠐  │
+     │  ⠁⠂⠄  ⠈⠐⠁  │
+     │  ⠂⠄⠈  ⠐⠁⠂  │
+     └──────────────┘
+      ║  ║  ║  ║  ║
+      ╚══╩══╩══╩══╝`,
+`     ┌──────────────┐
+     │  ⠄⠈⠐  ⠁⠂⠄  │
+     │  ⠈⠐⠁  ⠂⠄⠈  │
+     │  ⠐⠁⠂  ⠄⠈⠐  │
+     │  ⠁⠂⠄  ⠈⠐⠁  │
+     │  ⠂⠄⠈  ⠐⠁⠂  │
+     │  ⠄⠈⠐  ⠁⠂⠄  │
+     └──────────────┘
+      ║  ║  ║  ║  ║
+      ╚══╩══╩══╩══╝`,
+`     ┌──────────────┐
+     │  ⠈⠐⠁  ⠂⠄⠈  │
+     │  ⠐⠁⠂  ⠄⠈⠐  │
+     │  ⠁⠂⠄  ⠈⠐⠁  │
+     │  ⠂⠄⠈  ⠐⠁⠂  │
+     │  ⠄⠈⠐  ⠁⠂⠄  │
+     │  ⠈⠐⠁  ⠂⠄⠈  │
+     └──────────────┘
+      ║  ║  ║  ║  ║
+      ╚══╩══╩══╩══╝`,
         ];
 
         const ASCII_TALKING_FRAMES = [
-`         ╭──────────────╮
-      ╭──┤  ⠁  ⠂  ⠄  ├──╮
-     │   ╰──────────────╯   │
-    │  ╭────────────────╮  │
-    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
-    │  │ ░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
-    │  ╰────────────────╯  │
-     │   ╭──────────────╮   │
-      ╰──┤  ⠁  ⠂  ⠄  ├──╯
-         ╰──────────────╯`,
-`         ╭──────────────╮
-      ╭──┤  ⠂  ⠄  ⠈  ├──╮
-     │   ╰──────────────╯   │
-    │  ╭────────────────╮  │
-    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  │░░▒▒▒▓▓▓▓▓▓▓▒▒▒│  │
-    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  ╰────────────────╯  │
-     │   ╭──────────────╮   │
-      ╰──┤  ⠂  ⠄  ⠈  ├──╯
-         ╰──────────────╯`,
-`         ╭──────────────╮
-      ╭──┤  ⠄  ⠈  ⠐  ├──╮
-     │   ╰──────────────╯   │
-    │  ╭────────────────╮  │
-    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
-    │  │ ░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
-    │  ╰────────────────╯  │
-     │   ╭──────────────╮   │
-      ╰──┤  ⠄  ⠈  ⠐  ├──╯
-         ╰──────────────╯`,
-`         ╭──────────────╮
-      ╭──┤  ⠈  ⠐  ⠁  ├──╮
-     │   ╰──────────────╯   │
-    │  ╭────────────────╮  │
-    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  │░░▒▒▒▓▓▓▓▓▓▓▒▒▒│  │
-    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  ╰────────────────╯  │
-     │   ╭──────────────╮   │
-      ╰──┤  ⠈  ⠐  ⠁  ├──╯
-         ╰──────────────╯`,
-`         ╭──────────────╮
-      ╭──┤  ⠐  ⠁  ⠂  ├──╮
-     │   ╰──────────────╯   │
-    │  ╭────────────────╮  │
-    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
-    │  │ ░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
-    │  ╰────────────────╯  │
-     │   ╭──────────────╮   │
-      ╰──┤  ⠐  ⠁  ⠂  ├──╯
-         ╰──────────────╯`,
-`         ╭──────────────╮
-      ╭──┤  ⠁  ⠂  ⠄  ├──╮
-     │   ╰──────────────╯   │
-    │  ╭────────────────╮  │
-    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  │░░▒▒▒▓▓▓▓▓▓▓▒▒▒│  │
-    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
-    │  ╰────────────────╯  │
-     │   ╭──────────────╮   │
-      ╰──┤  ⠁  ⠂  ⠄  ├──╯
-         ╰──────────────╯`,
+`       ╔════════════╗
+       ║  ░░▒▒▓▓▓▒  ║
+       ║ ░▒▓▓▓▓▓▓▒░ ║
+       ║ ░▒▓▓▓▓▓▓▒░ ║
+       ║  ░░▒▒▓▓▒░  ║
+       ║   ░▒▒▓▒░   ║
+       ║    ░▒▒░    ║
+       ╚════════════╝
+        ║▓▓║▓▓║▓▓║
+        ╚══╩══╩══╝`,
+`       ╔════════════╗
+       ║ ░░▒▒▓▓▓▓░  ║
+       ║░▒▓▓▓▓▓▓▓▒░ ║
+       ║░▒▓▓▓▓▓▓▓▒░ ║
+       ║ ░▒▓▓▓▓▓▒░  ║
+       ║  ░▒▓▓▓▒░   ║
+       ║   ░▒▓▒░    ║
+       ╚════════════╝
+        ║▓▓║▓▓║▓▓║
+        ╚══╩══╩══╝`,
+`       ╔════════════╗
+       ║  ░░▒▒▓▓▒░  ║
+       ║ ░▒▓▓▓▓▓▓▒░ ║
+       ║░▒▓▓▓▓▓▓▓▓▒░║
+       ║░▒▓▓▓▓▓▓▓▓▒░║
+       ║ ░▒▓▓▓▓▓▒░  ║
+       ║  ░░▒▓▓▒░   ║
+       ╚════════════╝
+        ║▓▓║▓▓║▓▓║
+        ╚══╩══╩══╝`,
+`       ╔════════════╗
+       ║   ░▒▓▓▒░   ║
+       ║  ░▒▓▓▓▓▒░  ║
+       ║ ░▒▓▓▓▓▓▓▒░ ║
+       ║░▒▓▓▓▓▓▓▓▓▒░║
+       ║░▒▓▓▓▓▓▓▓▓▒░║
+       ║ ░▒▓▓▓▓▓▒░  ║
+       ╚════════════╝
+        ║▓▓║▓▓║▓▓║
+        ╚══╩══╩══╝`,
+`       ╔════════════╗
+       ║  ░░▒▒▓▓▒░  ║
+       ║ ░▒▓▓▓▓▓▓▒░ ║
+       ║░▒▓▓▓▓▓▓▓▓▒░║
+       ║░▒▓▓▓▓▓▓▓▓▒░║
+       ║ ░▒▓▓▓▓▓▒░  ║
+       ║  ░░▒▓▓▒░   ║
+       ╚════════════╝
+        ║▓▓║▓▓║▓▓║
+        ╚══╩══╩══╝`,
+`       ╔════════════╗
+       ║ ░░▒▒▓▓▓▓░  ║
+       ║░▒▓▓▓▓▓▓▓▒░ ║
+       ║░▒▓▓▓▓▓▓▓▒░ ║
+       ║ ░▒▓▓▓▓▓▒░  ║
+       ║  ░▒▓▓▓▒░   ║
+       ║   ░▒▓▒░    ║
+       ╚════════════╝
+        ║▓▓║▓▓║▓▓║
+        ╚══╩══╩══╝`,
         ];
 
         function time() { return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }); }
@@ -727,7 +748,7 @@
                 i++;
             }
             render();
-            const speed = type === 'talking' ? 100 : type === 'thinking' ? 200 : 400;
+            const speed = type === 'talking' ? 80 : type === 'thinking' ? 250 : 600;
             asciiInterval = setInterval(render, speed);
         }
 
@@ -818,13 +839,22 @@
         }
 
         async function setVoice(id) {
-            await fetch('/api/config', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ voice: id })
-            });
-            await loadConfig();
-            addSys(`voice → ${id}`);
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ voice: id })
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    addSys(`voice error: ${err.error}`);
+                    return;
+                }
+                await loadConfig();
+                addSys(`voice → ${id}`);
+            } catch (e) {
+                addSys(`voice error: ${e.message}`);
+            }
         }
 
         async function loadConfig() {
@@ -842,6 +872,12 @@
             cfgSteps.value = cfg.steps;
             cfgSpeed.value = cfg.speed;
             cfgTextSpeed.value = textSpeed;
+
+            cfgApiKey.value = cfg.openrouter_api_key || '';
+            cfgModel.value = cfg.openrouter_model || 'anthropic/claude-sonnet-4-20250514';
+            cfgTemp.value = cfg.openrouter_temperature || 0.7;
+            cfgMaxTok.value = cfg.openrouter_max_tokens || 4096;
+            cfgSystemPrompt.value = cfg.openrouter_system_prompt || 'You are a helpful AI assistant.';
 
             applyTheme(cfg.theme || 'wabisabi');
             updateStatusbar();
@@ -893,9 +929,149 @@
             input.style.height = Math.min(input.scrollHeight, 160) + 'px';
         });
 
+        function setMode(mode) {
+            currentMode = mode;
+            sbMode.textContent = mode;
+            sbMode.className = 'mode' + (mode === 'ai' ? ' ai-mode' : '');
+            sbVoice.style.display = mode === 'ai' ? 'none' : '';
+            sepVoice.style.display = mode === 'ai' ? 'none' : '';
+            sbConfig.style.display = mode === 'ai' ? 'none' : '';
+            sepConfig.style.display = mode === 'ai' ? 'none' : '';
+            sbTokens.style.display = mode === 'ai' ? '' : 'none';
+            input.placeholder = mode === 'ai' ? 'ask anything...' : '...';
+            if (mode === 'ai') {
+                loadSessions();
+            }
+        }
+
+        function toggleMode() {
+            setMode(currentMode === 'tts' ? 'ai' : 'tts');
+        }
+
+        async function loadSessions() {
+            try {
+                const res = await fetch('/api/sessions');
+                const data = await res.json();
+                sessions = data.sessions;
+                currentSessionId = data.active;
+                renderSessions();
+            } catch (e) {
+                console.error('Failed to load sessions:', e);
+            }
+        }
+
+        function renderSessions() {
+            sessionList.innerHTML = '';
+            for (const s of sessions) {
+                const item = document.createElement('div');
+                item.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+                item.innerHTML = `
+                    <span class="session-title" onclick="activateSession('${s.id}')">${esc(s.title)}</span>
+                    <span class="session-count">${s.message_count}</span>
+                    <button class="session-del" onclick="deleteSession('${s.id}')">×</button>
+                `;
+                sessionList.appendChild(item);
+            }
+        }
+
+        async function createSession() {
+            try {
+                const res = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: 'New Session' })
+                });
+                const data = await res.json();
+                currentSessionId = data.id;
+                messages.innerHTML = '';
+                await loadSessions();
+                addSys('new session');
+            } catch (e) {
+                addSys('error: ' + e.message);
+            }
+        }
+
+        async function activateSession(id) {
+            try {
+                await fetch(`/api/sessions/${id}/activate`, { method: 'POST' });
+                currentSessionId = id;
+                messages.innerHTML = '';
+                const res = await fetch(`/api/sessions/${id}/messages`);
+                const data = await res.json();
+                for (const msg of data.messages) {
+                    if (msg.role === 'user') {
+                        addUser(msg.content);
+                    } else if (msg.role === 'assistant') {
+                        addAi(msg.content, 0, 0);
+                    }
+                }
+                await loadSessions();
+            } catch (e) {
+                addSys('error: ' + e.message);
+            }
+        }
+
+        async function deleteSession(id) {
+            try {
+                await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
+                if (currentSessionId === id) {
+                    currentSessionId = null;
+                    messages.innerHTML = '';
+                }
+                await loadSessions();
+            } catch (e) {
+                addSys('error: ' + e.message);
+            }
+        }
+
+        async function saveAiConfig() {
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    openrouter_api_key: cfgApiKey.value,
+                    openrouter_model: cfgModel.value,
+                    openrouter_temperature: parseFloat(cfgTemp.value),
+                    openrouter_max_tokens: parseInt(cfgMaxTok.value),
+                    openrouter_system_prompt: cfgSystemPrompt.value
+                })
+            });
+            cfg.openrouter_api_key = cfgApiKey.value;
+            if (cfg.openrouter_api_key && currentMode !== 'ai') {
+                setMode('ai');
+            }
+            addSys('ai settings saved');
+        }
+
+        btnNewSession.addEventListener('click', createSession);
+        btnSaveAi.addEventListener('click', saveAiConfig);
+
+        function addAi(text, promptTokens, completionTokens) {
+            const m = document.createElement('div');
+            m.className = 'msg';
+            let tokenHtml = '';
+            if (promptTokens || completionTokens) {
+                tokenHtml = `<span class="token-badge">↑${promptTokens} ↓${completionTokens}</span>`;
+            }
+            m.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-role role-ai">${assistantName}</span>
+                    <span class="msg-time">${time()}</span>
+                    ${tokenHtml}
+                </div>
+                <div class="msg-body">${esc(text)}</div>
+            `;
+            messages.appendChild(m);
+            scroll();
+        }
+
         async function boot() {
             await loadConfig();
             if (cfg.show_glyph) startAscii('idle');
+
+            if (cfg.openrouter_api_key) {
+                setMode('ai');
+            }
 
             const lines = [
                 { t: `  ${cfg.name || 'jarvis'} · supertonic 3`, c: 'boot-info' },
@@ -998,7 +1174,16 @@
             input.disabled = true;
             sendBtn.disabled = true;
             hint.textContent = '...';
-            sbMode.textContent = 'processing';
+            sbMode.textContent = currentMode === 'ai' ? 'ai' : 'tts';
+
+            if (currentMode === 'ai') {
+                await sendAi(text);
+            } else {
+                await sendTts(text);
+            }
+        }
+
+        async function sendTts(text) {
             sbState.textContent = 'thinking';
             if (cfg.show_glyph) startAscii('thinking');
 
@@ -1008,14 +1193,15 @@
 
             const thinkMsg = document.createElement('div');
             thinkMsg.className = 'msg';
-            thinkMsg.id = 'thinking';
+            const thinkLog = document.createElement('div');
+            thinkLog.className = 'thinking-inline';
             thinkMsg.innerHTML = `
                 <div class="msg-header">
                     <span class="msg-role role-ai">${assistantName}</span>
                     <span class="msg-time">${time()}</span>
                 </div>
-                <div class="thinking-inline" id="thinkLog"></div>
             `;
+            thinkMsg.appendChild(thinkLog);
             messages.appendChild(thinkMsg);
             scroll();
 
@@ -1024,13 +1210,12 @@
                 { t: 'synthesizing...', c: '', d: 200 },
             ];
 
-            const logEl = document.getElementById('thinkLog');
             for (const l of logs) {
                 await new Promise(r => setTimeout(r, l.d));
                 const line = document.createElement('span');
                 line.className = l.c;
                 line.textContent = l.t + '  ';
-                logEl.appendChild(line);
+                thinkLog.appendChild(line);
                 scroll();
             }
 
@@ -1053,7 +1238,6 @@
                 const audio = new Audio(data.audio);
                 audio.play();
 
-                sbMode.textContent = 'speaking';
                 sbState.textContent = 'talking';
                 if (cfg.show_glyph) startAscii('talking');
 
@@ -1074,7 +1258,6 @@
                 const ctrls = audioControls(audio);
                 body.appendChild(ctrls);
                 audio.onended = () => {
-                    sbMode.textContent = 'normal';
                     sbState.textContent = 'idle';
                     if (cfg.show_glyph) startAscii('idle');
                 };
@@ -1090,6 +1273,146 @@
                 sendBtn.disabled = false;
                 hint.textContent = 'enter';
                 input.focus();
+            }
+        }
+
+        async function sendAi(text) {
+            setMode('ai');
+            sbState.textContent = 'thinking';
+            if (cfg.show_glyph) startAscii('thinking');
+
+            addUser(text);
+            input.value = '';
+            input.style.height = 'auto';
+
+            const m = document.createElement('div');
+            m.className = 'msg';
+            const tokenEl = document.createElement('span');
+            tokenEl.className = 'token-badge';
+            const audioCtrl = document.createElement('span');
+            audioCtrl.className = 'audio-ctrl';
+            const body = document.createElement('div');
+            body.className = 'msg-body';
+            m.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-role role-ai">${assistantName}</span>
+                    <span class="msg-time">${time()}</span>
+                </div>
+            `;
+            m.querySelector('.msg-header').appendChild(tokenEl);
+            m.querySelector('.msg-header').appendChild(audioCtrl);
+            m.appendChild(body);
+            messages.appendChild(m);
+            scroll();
+
+            let fullContent = '';
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, session_id: currentSessionId })
+                });
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.error) {
+                                    body.textContent = 'Error: ' + data.error;
+                                    break;
+                                }
+                                if (data.content) {
+                                    fullContent += data.content;
+                                    body.textContent = fullContent;
+                                    scroll();
+                                }
+                                if (data.done) {
+                                    const pt = data.prompt_tokens || 0;
+                                    const ct = data.completion_tokens || 0;
+                                    tokenEl.textContent = `↑${pt} ↓${ct}`;
+                                    sbTokens.textContent = `↑${pt} ↓${ct}`;
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+
+                if (currentSessionId) {
+                    await loadSessions();
+                }
+
+                if (fullContent) {
+                    await synthesizeAndPlay(fullContent, body, audioCtrl);
+                }
+
+            } catch (err) {
+                body.textContent = 'Error: ' + err.message;
+            } finally {
+                busy = false;
+                input.disabled = false;
+                sendBtn.disabled = false;
+                hint.textContent = 'enter';
+                sbState.textContent = 'idle';
+                if (cfg.show_glyph) startAscii('idle');
+                input.focus();
+            }
+        }
+
+        async function synthesizeAndPlay(text, bodyEl, ctrlEl) {
+            const extractSpeech = (t) => {
+                let s = t.replace(/```[\s\S]*?```/g, '');
+                s = s.replace(/`[^`]*`/g, '');
+                s = s.replace(/[\u2500-\u257F\u2580-\u259F\u2800-\u28FF]/g, '');
+                s = s.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+                s = s.replace(/[#*_~>]/g, '');
+                return s.trim();
+            };
+            const clean = extractSpeech(text);
+            if (!clean) return;
+
+            try {
+                const res = await fetch('/api/synthesize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: clean })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    addSys(`tts error: ${data.error}`);
+                    return;
+                }
+
+                const audio = new Audio(data.audio);
+                const ctrls = audioControls(audio);
+                ctrlEl.innerHTML = '';
+                ctrlEl.appendChild(ctrls);
+
+                sbState.textContent = 'talking';
+                if (cfg.show_glyph) startAscii('talking');
+
+                await new Promise((resolve) => {
+                    audio.play();
+                    audio.onended = resolve;
+                    audio.onerror = resolve;
+                });
+
+                sbState.textContent = 'idle';
+                if (cfg.show_glyph) startAscii('idle');
+            } catch (e) {
+                addSys(`tts error: ${e.message}`);
             }
         }
 

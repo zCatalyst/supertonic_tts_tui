@@ -6,3 +6,4 @@ aura_config.json
 .env
 .venv/
 venv/
+aura_sessions.json
