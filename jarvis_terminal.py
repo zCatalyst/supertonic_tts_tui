@@ -28,6 +28,7 @@ DEFAULT_CONFIG = {
     "speed": 1.05,
     "text_speed": 20,
     "theme": "catppuccin",
+    "show_glyph": True,
     "voices": DEFAULT_VOICES,
 }
 
@@ -133,6 +134,8 @@ def update_config():
         config["text_speed"] = int(data["text_speed"])
     if "theme" in data:
         config["theme"] = data["theme"]
+    if "show_glyph" in data:
+        config["show_glyph"] = bool(data["show_glyph"])
 
     save_config(config)
     return jsonify({**config, "voices": voices})
@@ -149,6 +152,7 @@ def reset_config():
         "speed": 1.05,
         "text_speed": 20,
         "theme": "catppuccin",
+        "show_glyph": True,
         "voices": voices,
     }
     save_config(config)

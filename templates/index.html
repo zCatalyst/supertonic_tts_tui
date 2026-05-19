@@ -3,372 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal</title>
+    <title>terminal</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg: #1e1e2e;
-            --bg-dark: #181825;
-            --surface: #313244;
-            --surface-bright: #45475a;
-            --text: #cdd6f4;
-            --text-dim: #6c7086;
-            --subtext: #585b70;
-            --overlay: #7f849c;
-            --blue: #89b4fa;
-            --green: #a6e3a1;
-            --red: #f38ba8;
-            --mauve: #cba6f7;
-            --peach: #fab387;
-            --yellow: #f9e2af;
-            --teal: #94e2d5;
-            --pink: #f5c2e7;
-            --lavender: #b4befe;
-            --border: #45475a;
+            --bg: #1a1816;
+            --bg-deep: #141210;
+            --surface: #2a2622;
+            --surface-light: #3a3530;
+            --text: #d4c5b5;
+            --text-dim: #7a6f64;
+            --text-muted: #5a5048;
+            --accent: #b8a088;
+            --accent-bright: #d4b896;
+            --green: #8a9a7b;
+            --green-bright: #a8b898;
+            --warm: #c4956a;
+            --cool: #7a8a9a;
+            --border: #3a3530;
+            --border-light: #4a4540;
         }
 
         html, body {
             height: 100%;
             background: var(--bg);
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text);
             overflow: hidden;
+            letter-spacing: 0.01em;
         }
 
-        .app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+        .app { display: flex; flex-direction: column; height: 100vh; }
+
+        .statusbar {
+            display: flex; align-items: center; padding: 0 12px; height: 24px;
+            background: var(--bg-deep); border-bottom: 1px solid var(--border);
+            font-size: 11px; color: var(--text-muted); gap: 8px; user-select: none;
         }
 
-        .topbar {
-            display: flex;
-            align-items: center;
-            padding: 4px 12px;
-            background: var(--bg-dark);
-            border-bottom: 1px solid var(--border);
-            font-size: 12px;
-            color: var(--text-dim);
-            gap: 12px;
-            min-height: 28px;
-            user-select: none;
-        }
-
-        .topbar-name { color: var(--blue); font-weight: 600; }
-        .topbar-sep { color: var(--subtext); }
-        .topbar-status { margin-left: auto; display: flex; gap: 16px; }
-        .topbar-status span { display: flex; align-items: center; gap: 4px; }
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+        .statusbar .mode { color: var(--accent); font-weight: 500; }
+        .statusbar .sep { color: var(--border-light); }
+        .statusbar .right { margin-left: auto; display: flex; gap: 12px; }
+        .statusbar .state { color: var(--green); }
 
         .main { flex: 1; display: flex; overflow: hidden; }
 
-        .chat {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
+        .chat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 0;
-        }
-
-        .messages::-webkit-scrollbar { width: 6px; }
+        .messages { flex: 1; overflow-y: auto; padding: 4px 0; }
+        .messages::-webkit-scrollbar { width: 4px; }
         .messages::-webkit-scrollbar-track { background: transparent; }
-        .messages::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+        .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        .msg { padding: 4px 16px; line-height: 1.5; }
-        .msg:hover { background: rgba(255,255,255,0.02); }
+        .ascii-area {
+            padding: 4px 16px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-deep);
+            position: relative;
+            overflow: hidden;
+            transition: min-height 0.3s, padding 0.3s;
+        }
 
-        .msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
-        .msg-role { font-weight: 600; font-size: 12px; min-width: 60px; }
-        .role-user { color: var(--peach); }
-        .role-ai { color: var(--blue); }
+        .ascii-area.hidden {
+            min-height: 0;
+            padding: 0 16px;
+            border-bottom: none;
+        }
+
+        .ascii-area.hidden .ascii-art,
+        .ascii-area.hidden .ascii-label {
+            display: none;
+        }
+
+        .ascii-art {
+            white-space: pre;
+            font-size: 10px;
+            line-height: 1.15;
+            color: var(--text-dim);
+            text-align: center;
+            transition: color 0.8s ease;
+        }
+
+        .ascii-art.talking { color: var(--green); }
+        .ascii-art.thinking { color: var(--accent); }
+        .ascii-art.idle { color: var(--text-muted); }
+
+        .ascii-label {
+            position: absolute;
+            bottom: 4px;
+            right: 12px;
+            font-size: 9px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .msg { padding: 3px 16px; line-height: 1.5; }
+        .msg:hover { background: rgba(255,255,255,0.015); }
+        .msg-header { display: flex; align-items: baseline; gap: 6px; margin-bottom: 1px; }
+        .msg-role { font-weight: 500; font-size: 11px; min-width: 50px; }
+        .role-user { color: var(--warm); }
+        .role-ai { color: var(--accent-bright); }
         .role-sys { color: var(--green); }
-        .msg-time { color: var(--subtext); font-size: 11px; }
-        .msg-body { color: var(--text); padding-left: 68px; white-space: pre-wrap; word-break: break-word; }
+        .msg-time { color: var(--text-muted); font-size: 10px; }
+        .msg-body { color: var(--text); padding-left: 56px; white-space: pre-wrap; word-break: break-word; }
         .msg-body.user-body { color: var(--text); }
 
         .cursor-blink {
-            display: inline-block;
-            width: 7px;
-            height: 14px;
-            background: var(--blue);
-            animation: blink 1s step-end infinite;
-            vertical-align: text-bottom;
-            margin-left: 1px;
+            display: inline-block; width: 6px; height: 13px; background: var(--accent);
+            animation: blink 1.2s step-end infinite; vertical-align: text-bottom; margin-left: 1px;
         }
 
         @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
 
-        .thinking { padding-left: 68px; color: var(--text-dim); font-size: 12px; }
-        .thinking-line { display: flex; align-items: center; gap: 6px; padding: 1px 0; }
-        .thinking-spinner { display: inline-flex; gap: 2px; }
-        .thinking-spinner span {
-            width: 4px; height: 4px; background: var(--blue); border-radius: 50%;
-            animation: spin 1.2s infinite;
-        }
-        .thinking-spinner span:nth-child(2) { animation-delay: 0.15s; }
-        .thinking-spinner span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes spin { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.7); } 40% { opacity: 1; transform: scale(1); } }
-
-        .log-line { opacity: 0; animation: fadein 0.2s forwards; }
-        @keyframes fadein { to { opacity: 1; } }
+        .thinking-inline { padding-left: 56px; color: var(--text-dim); font-size: 11px; display: flex; align-items: center; gap: 6px; }
         .log-ok { color: var(--green); }
-        .log-info { color: var(--blue); }
+        .log-info { color: var(--accent); }
 
-        .wave { display: inline-flex; align-items: center; gap: 2px; height: 14px; margin-left: 8px; vertical-align: middle; }
-        .wave i {
-            display: block; width: 2px; background: var(--green); border-radius: 1px;
-            animation: wave 1s ease-in-out infinite;
-        }
-        .wave i:nth-child(1) { animation-delay: 0s; height: 4px; }
-        .wave i:nth-child(2) { animation-delay: 0.08s; height: 8px; }
-        .wave i:nth-child(3) { animation-delay: 0.16s; height: 12px; }
-        .wave i:nth-child(4) { animation-delay: 0.24s; height: 10px; }
-        .wave i:nth-child(5) { animation-delay: 0.32s; height: 14px; }
-        .wave i:nth-child(6) { animation-delay: 0.4s; height: 8px; }
-        .wave i:nth-child(7) { animation-delay: 0.48s; height: 6px; }
-        @keyframes wave { 0%, 100% { transform: scaleY(0.4); opacity: 0.4; } 50% { transform: scaleY(1); opacity: 1; } }
-        .wave.playing i { animation-play-state: running; }
-        .wave.paused i { animation-play-state: paused; }
-
-        /* Audio controls */
-        .audio-controls {
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
+        .audio-ctrl { display: inline-flex; align-items: center; gap: 1px; margin-left: 6px; vertical-align: middle; }
         .audio-btn {
-            background: var(--surface);
-            border: 1px solid transparent;
-            color: var(--text-dim);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            padding: 2px 6px;
-            cursor: pointer;
-            transition: all 0.1s;
-            line-height: 1;
+            background: none; border: none; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            padding: 1px 4px; cursor: pointer; transition: color 0.1s;
         }
+        .audio-btn:hover { color: var(--text); }
+        .badge { color: var(--green); font-size: 10px; margin-left: 4px; }
 
-        .audio-btn:hover { border-color: var(--text-dim); color: var(--text); }
-        .audio-btn.active { color: var(--green); border-color: var(--green); }
-
-        /* Input area */
-        .input-area {
-            border-top: 1px solid var(--border);
-            padding: 8px 12px;
-            background: var(--bg-dark);
-        }
-
-        .input-row {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-        }
-
-        .input-prompt {
-            color: var(--green);
-            font-weight: 600;
-            font-size: 13px;
-            padding-top: 8px;
-            line-height: 1.4;
-        }
-
-        .textarea-wrap {
-            flex: 1;
-            position: relative;
-        }
-
+        .input-area { border-top: 1px solid var(--border); padding: 6px 12px; background: var(--bg-deep); }
+        .input-row { display: flex; align-items: flex-end; gap: 8px; }
+        .input-prompt { color: var(--green); font-weight: 500; font-size: 12px; padding-top: 6px; }
+        .textarea-wrap { flex: 1; }
         .input-field {
-            width: 100%;
-            background: var(--surface);
-            border: 1px solid transparent;
-            color: var(--text);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            outline: none;
-            caret-color: var(--blue);
-            padding: 8px 10px;
-            resize: none;
-            overflow: hidden;
-            line-height: 1.5;
-            min-height: 38px;
-            max-height: 200px;
-            border-radius: 4px;
+            width: 100%; background: var(--surface); border: 1px solid transparent;
+            color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px;
+            outline: none; caret-color: var(--accent); padding: 6px 8px; resize: none;
+            overflow: hidden; line-height: 1.5; min-height: 32px; max-height: 160px;
         }
-
-        .input-field:focus { border-color: var(--blue); }
-        .input-field::placeholder { color: var(--subtext); }
-        .input-field:disabled { color: var(--subtext); }
-
-        .input-actions {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding-top: 8px;
-        }
-
-        .input-hint { color: var(--subtext); font-size: 11px; }
-
+        .input-field:focus { border-color: var(--border-light); }
+        .input-field::placeholder { color: var(--text-muted); }
+        .input-field:disabled { color: var(--text-muted); }
+        .input-actions { display: flex; align-items: center; gap: 6px; padding-top: 6px; }
+        .input-hint { color: var(--text-muted); font-size: 10px; }
         .send-btn {
-            background: var(--surface);
-            border: 1px solid transparent;
-            color: var(--text-dim);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            padding: 6px 14px;
-            cursor: pointer;
-            transition: all 0.1s;
-            border-radius: 4px;
+            background: var(--surface); border: 1px solid transparent; color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 5px 12px;
+            cursor: pointer; transition: all 0.1s;
         }
-
         .send-btn:hover { border-color: var(--green); color: var(--green); }
         .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* Sidebar */
         .sidebar {
-            width: 260px;
-            background: var(--bg-dark);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            width: 220px; background: var(--bg-deep); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden;
         }
-
-        .sidebar-section { border-bottom: 1px solid var(--border); padding: 6px 0; }
+        .sidebar-section { border-bottom: 1px solid var(--border); padding: 4px 0; }
         .sidebar-header {
-            padding: 4px 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-dim);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
+            padding: 3px 10px; font-size: 10px; font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-muted); display: flex; align-items: center;
+            justify-content: space-between; cursor: pointer; user-select: none;
         }
-        .sidebar-header:hover { color: var(--text); }
-        .sidebar-header .toggle { font-size: 10px; transition: transform 0.15s; }
+        .sidebar-header:hover { color: var(--text-dim); }
+        .sidebar-header .toggle { font-size: 9px; transition: transform 0.15s; }
         .sidebar-header.collapsed .toggle { transform: rotate(-90deg); }
         .sidebar-content { overflow: hidden; }
         .sidebar-content.collapsed { display: none; }
-
-        .name-row { display: flex; align-items: center; gap: 6px; padding: 3px 12px; }
-        .name-label { color: var(--text-dim); font-size: 12px; min-width: 36px; }
+        .name-row { display: flex; align-items: center; gap: 4px; padding: 2px 10px; }
+        .name-label { color: var(--text-muted); font-size: 11px; min-width: 28px; }
         .name-input {
             flex: 1; background: var(--surface); border: 1px solid transparent;
-            color: var(--blue); font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; padding: 3px 6px; outline: none;
+            color: var(--accent-bright); font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; padding: 2px 5px; outline: none;
         }
-        .name-input:focus { border-color: var(--blue); }
-
-        .voice-list { padding: 0 12px; }
-        .voice-item { display: grid; grid-template-columns: 32px 1fr; gap: 4px 6px; padding: 2px 0; align-items: baseline; }
-        .voice-id {
-            font-weight: 600; font-size: 12px; color: var(--text-dim); cursor: pointer;
-            padding: 1px 4px; border-radius: 2px;
-        }
-        .voice-id:hover { background: var(--surface); color: var(--text); }
-        .voice-id.active { color: var(--blue); background: rgba(137, 180, 250, 0.1); }
-        .voice-name { font-size: 11px; color: var(--text-dim); }
-        .voice-desc-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 4px; padding-left: 32px; }
-        .voice-desc { font-size: 11px; color: var(--subtext); flex: 1; }
+        .name-input:focus { border-color: var(--border-light); }
+        .voice-list { padding: 0 10px; }
+        .voice-item { display: grid; grid-template-columns: 28px 1fr; gap: 2px 4px; padding: 1px 0; align-items: baseline; }
+        .voice-id { font-weight: 500; font-size: 11px; color: var(--text-muted); cursor: pointer; padding: 1px 3px; }
+        .voice-id:hover { color: var(--text); }
+        .voice-id.active { color: var(--accent-bright); }
+        .voice-name { font-size: 10px; color: var(--text-muted); }
+        .voice-desc-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 3px; padding-left: 28px; }
+        .voice-desc { font-size: 10px; color: var(--text-muted); flex: 1; }
         .voice-edit {
-            background: none; border: none; color: var(--subtext); cursor: pointer;
-            font-size: 10px; padding: 0 2px; opacity: 0; transition: opacity 0.1s;
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            font-size: 9px; padding: 0 2px; opacity: 0; transition: opacity 0.1s;
         }
         .voice-item:hover .voice-edit { opacity: 1; }
-        .voice-edit:hover { color: var(--blue); }
+        .voice-edit:hover { color: var(--accent); }
         .voice-desc-input {
-            flex: 1; background: var(--surface); border: 1px solid var(--blue);
+            flex: 1; background: var(--surface); border: 1px solid var(--border-light);
             color: var(--text); font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; padding: 2px 4px; outline: none;
+            font-size: 10px; padding: 1px 4px; outline: none;
         }
-
-        .cfg-list { padding: 0 12px; }
-        .cfg-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
-        .cfg-key { color: var(--text-dim); font-size: 12px; min-width: 70px; }
+        .theme-list { padding: 0 10px; }
+        .theme-item {
+            display: flex; align-items: center; gap: 6px; padding: 2px 3px;
+            cursor: pointer; font-size: 11px; color: var(--text-muted);
+        }
+        .theme-item:hover { color: var(--text); }
+        .theme-item.active { color: var(--accent-bright); }
+        .theme-swatch { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--border); }
+        .cfg-list { padding: 0 10px; }
+        .cfg-row { display: flex; align-items: center; gap: 4px; padding: 1px 0; }
+        .cfg-key { color: var(--text-muted); font-size: 11px; min-width: 60px; }
         .cfg-val {
             flex: 1; background: var(--surface); border: 1px solid transparent;
             color: var(--text); font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; padding: 2px 6px; outline: none; text-align: right;
+            font-size: 11px; padding: 2px 4px; outline: none; text-align: right;
         }
-        .cfg-val:focus { border-color: var(--blue); }
-        .cfg-actions { display: flex; gap: 4px; padding: 4px 12px; }
+        .cfg-val:focus { border-color: var(--border-light); }
+        .cfg-actions { display: flex; gap: 3px; padding: 3px 10px; }
         .cfg-btn {
             flex: 1; background: var(--surface); border: 1px solid transparent;
-            color: var(--text-dim); font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; padding: 3px 6px; cursor: pointer; transition: all 0.1s;
+            color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; padding: 2px 5px; cursor: pointer; transition: all 0.1s;
         }
         .cfg-btn:hover { border-color: var(--text-dim); color: var(--text); }
-        .cfg-btn.danger:hover { border-color: var(--red); color: var(--red); }
-
-        .theme-list { padding: 0 12px; }
-        .theme-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 3px 4px;
-            cursor: pointer;
-            border-radius: 2px;
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-        .theme-item:hover { background: var(--surface); color: var(--text); }
-        .theme-item.active { color: var(--blue); }
-        .theme-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-        }
-        .theme-item.active .theme-dot { border-color: var(--blue); }
-
-        .badge { display: inline-block; color: var(--green); font-size: 11px; margin-left: 6px; }
-
-        .boot { color: var(--text-dim); font-size: 12px; }
-        .boot-line { opacity: 0; animation: fadein 0.15s forwards; padding: 0 16px; }
+        .cfg-btn.danger:hover { border-color: var(--warm); color: var(--warm); }
+        .boot { color: var(--text-muted); font-size: 11px; }
+        .boot-line { padding: 0 16px; }
         .boot-ok { color: var(--green); }
-        .boot-info { color: var(--blue); }
+        .boot-info { color: var(--accent); }
     </style>
     <style id="themeStyle"></style>
 </head>
 <body>
     <div class="app">
-        <div class="topbar">
-            <span class="topbar-name" id="topbarName">JARVIS</span>
-            <span class="topbar-sep">·</span>
-            <span id="topbarVoice">M1</span>
-            <span class="topbar-sep">·</span>
-            <span id="topbarConfig">steps:8 speed:1.05</span>
-            <div class="topbar-status">
-                <span><span class="status-dot"></span> ready</span>
+        <div class="statusbar">
+            <span class="mode" id="sbMode">normal</span>
+            <span class="sep">│</span>
+            <span id="sbName">jarvis</span>
+            <span class="sep">│</span>
+            <span id="sbVoice">m1</span>
+            <span class="sep">│</span>
+            <span id="sbConfig">8·1.05</span>
+            <div class="right">
+                <span class="state" id="sbState">idle</span>
             </div>
         </div>
 
         <div class="main">
             <div class="chat">
+                <div class="ascii-area" id="asciiArea">
+                    <span class="ascii-label" id="asciiLabel">idle</span>
+                </div>
                 <div class="messages" id="messages"></div>
                 <div class="input-area">
                     <div class="input-row">
                         <span class="input-prompt">❯</span>
                         <div class="textarea-wrap">
-                            <textarea class="input-field" id="input" placeholder="send a message..." rows="1"></textarea>
+                            <textarea class="input-field" id="input" placeholder="..." rows="1"></textarea>
                         </div>
                         <div class="input-actions">
-                            <span class="input-hint" id="hint">enter to send</span>
+                            <span class="input-hint" id="hint">enter</span>
                             <button class="send-btn" id="sendBtn">send</button>
                         </div>
                     </div>
@@ -378,60 +272,42 @@
             <div class="sidebar">
                 <div class="sidebar-section">
                     <div class="sidebar-header" onclick="toggleSection(this)">
-                        <span>name</span>
-                        <span class="toggle">▾</span>
+                        <span>name</span><span class="toggle">▾</span>
                     </div>
                     <div class="sidebar-content">
                         <div class="name-row">
                             <span class="name-label">set</span>
-                            <input class="name-input" id="nameInput" placeholder="assistant name">
+                            <input class="name-input" id="nameInput" placeholder="name">
                         </div>
                     </div>
                 </div>
-
                 <div class="sidebar-section">
                     <div class="sidebar-header" onclick="toggleSection(this)">
-                        <span>voices</span>
-                        <span class="toggle">▾</span>
+                        <span>voices</span><span class="toggle">▾</span>
                     </div>
                     <div class="sidebar-content">
                         <div class="voice-list" id="voiceList"></div>
                     </div>
                 </div>
-
                 <div class="sidebar-section">
                     <div class="sidebar-header" onclick="toggleSection(this)">
-                        <span>theme</span>
-                        <span class="toggle">▾</span>
+                        <span>theme</span><span class="toggle">▾</span>
                     </div>
                     <div class="sidebar-content">
                         <div class="theme-list" id="themeList"></div>
                     </div>
                 </div>
-
                 <div class="sidebar-section">
                     <div class="sidebar-header" onclick="toggleSection(this)">
-                        <span>config</span>
-                        <span class="toggle">▾</span>
+                        <span>config</span><span class="toggle">▾</span>
                     </div>
                     <div class="sidebar-content">
                         <div class="cfg-list">
-                            <div class="cfg-row">
-                                <span class="cfg-key">lang</span>
-                                <input class="cfg-val" id="cfgLang" value="en">
-                            </div>
-                            <div class="cfg-row">
-                                <span class="cfg-key">steps</span>
-                                <input class="cfg-val" id="cfgSteps" type="number" min="5" max="12" value="8">
-                            </div>
-                            <div class="cfg-row">
-                                <span class="cfg-key">speed</span>
-                                <input class="cfg-val" id="cfgSpeed" type="number" step="0.05" min="0.7" max="2.0" value="1.05">
-                            </div>
-                            <div class="cfg-row">
-                                <span class="cfg-key">text_speed</span>
-                                <input class="cfg-val" id="cfgTextSpeed" type="number" min="0" max="100" value="20">
-                            </div>
+                            <div class="cfg-row"><span class="cfg-key">glyph</span><span class="cfg-val" id="cfgGlyph" style="cursor:pointer;text-align:center" onclick="toggleGlyph()">on</span></div>
+                            <div class="cfg-row"><span class="cfg-key">lang</span><input class="cfg-val" id="cfgLang" value="en"></div>
+                            <div class="cfg-row"><span class="cfg-key">steps</span><input class="cfg-val" id="cfgSteps" type="number" min="5" max="12" value="8"></div>
+                            <div class="cfg-row"><span class="cfg-key">speed</span><input class="cfg-val" id="cfgSpeed" type="number" step="0.05" min="0.7" max="2.0" value="1.05"></div>
+                            <div class="cfg-row"><span class="cfg-key">text_ms</span><input class="cfg-val" id="cfgTextSpeed" type="number" min="0" max="100" value="20"></div>
                         </div>
                         <div class="cfg-actions">
                             <button class="cfg-btn" id="btnSave">save</button>
@@ -445,100 +321,84 @@
 
     <script>
         const THEMES = {
-            catppuccin: {
-                label: 'Catppuccin',
-                dot: '#cba6f7',
+            wabisabi: {
+                label: 'wabi-sabi', swatch: '#b8a088',
                 vars: {
-                    '--bg': '#1e1e2e', '--bg-dark': '#181825', '--surface': '#313244',
-                    '--surface-bright': '#45475a', '--text': '#cdd6f4', '--text-dim': '#6c7086',
-                    '--subtext': '#585b70', '--overlay': '#7f849c', '--blue': '#89b4fa',
-                    '--green': '#a6e3a1', '--red': '#f38ba8', '--mauve': '#cba6f7',
-                    '--peach': '#fab387', '--yellow': '#f9e2af', '--teal': '#94e2d5',
-                    '--pink': '#f5c2e7', '--lavender': '#b4befe', '--border': '#45475a',
+                    '--bg': '#1a1816', '--bg-deep': '#141210', '--surface': '#2a2622',
+                    '--surface-light': '#3a3530', '--text': '#d4c5b5', '--text-dim': '#7a6f64',
+                    '--text-muted': '#5a5048', '--accent': '#b8a088', '--accent-bright': '#d4b896',
+                    '--green': '#8a9a7b', '--green-bright': '#a8b898', '--warm': '#c4956a',
+                    '--cool': '#7a8a9a', '--border': '#3a3530', '--border-light': '#4a4540',
+                }
+            },
+            catppuccin: {
+                label: 'catppuccin', swatch: '#cba6f7',
+                vars: {
+                    '--bg': '#1e1e2e', '--bg-deep': '#181825', '--surface': '#313244',
+                    '--surface-light': '#45475a', '--text': '#cdd6f4', '--text-dim': '#6c7086',
+                    '--text-muted': '#585b70', '--accent': '#89b4fa', '--accent-bright': '#b4befe',
+                    '--green': '#a6e3a1', '--green-bright': '#a6e3a1', '--warm': '#fab387',
+                    '--cool': '#74c7ec', '--border': '#45475a', '--border-light': '#585b70',
                 }
             },
             matrix: {
-                label: 'Matrix',
-                dot: '#00ff41',
+                label: 'matrix', swatch: '#00ff41',
                 vars: {
-                    '--bg': '#0a0a0a', '--bg-dark': '#0d0d0d', '--surface': '#1a1a1a',
-                    '--surface-bright': '#2a2a2a', '--text': '#00ff41', '--text-dim': '#008020',
-                    '--subtext': '#004410', '--overlay': '#006622', '--blue': '#00ff41',
-                    '--green': '#00ff41', '--red': '#ff3333', '--mauve': '#00cc33',
-                    '--peach': '#00cc33', '--yellow': '#00ff41', '--teal': '#00ff41',
-                    '--pink': '#00cc33', '--lavender': '#00cc33', '--border': '#1a3a1a',
+                    '--bg': '#0a0a0a', '--bg-deep': '#080808', '--surface': '#151515',
+                    '--surface-light': '#222', '--text': '#00ff41', '--text-dim': '#008020',
+                    '--text-muted': '#004410', '--accent': '#00ff41', '--accent-bright': '#33ff66',
+                    '--green': '#00ff41', '--green-bright': '#33ff66', '--warm': '#00cc33',
+                    '--cool': '#00cc33', '--border': '#1a2a1a', '--border-light': '#2a3a2a',
                 }
             },
             monokai: {
-                label: 'Monokai',
-                dot: '#e6db74',
+                label: 'monokai', swatch: '#e6db74',
                 vars: {
-                    '--bg': '#272822', '--bg-dark': '#1e1f1c', '--surface': '#3e3d32',
-                    '--surface-bright': '#49483e', '--text': '#f8f8f2', '--text-dim': '#75715e',
-                    '--subtext': '#5a5a5a', '--overlay': '#808080', '--blue': '#66d9ef',
-                    '--green': '#a6e22e', '--red': '#f92672', '--mauve': '#ae81ff',
-                    '--peach': '#fd971f', '--yellow': '#e6db74', '--teal': '#a1efe4',
-                    '--pink': '#f92672', '--lavender': '#ae81ff', '--border': '#49483e',
+                    '--bg': '#272822', '--bg-deep': '#1e1f1c', '--surface': '#3e3d32',
+                    '--surface-light': '#49483e', '--text': '#f8f8f2', '--text-dim': '#75715e',
+                    '--text-muted': '#5a5a5a', '--accent': '#66d9ef', '--accent-bright': '#66d9ef',
+                    '--green': '#a6e22e', '--green-bright': '#a6e22e', '--warm': '#fd971f',
+                    '--cool': '#66d9ef', '--border': '#49483e', '--border-light': '#5a5a5a',
                 }
             },
             nord: {
-                label: 'Nord',
-                dot: '#88c0d0',
+                label: 'nord', swatch: '#88c0d0',
                 vars: {
-                    '--bg': '#2e3440', '--bg-dark': '#272c36', '--surface': '#3b4252',
-                    '--surface-bright': '#434c5e', '--text': '#eceff4', '--text-dim': '#4c566a',
-                    '--subtext': '#434c5e', '--overlay': '#d8dee9', '--blue': '#88c0d0',
-                    '--green': '#a3be8c', '--red': '#bf616a', '--mauve': '#b48ead',
-                    '--peach': '#d08770', '--yellow': '#ebcb8b', '--teal': '#8fbcbb',
-                    '--pink': '#b48ead', '--lavender': '#81a1c1', '--border': '#434c5e',
+                    '--bg': '#2e3440', '--bg-deep': '#272c36', '--surface': '#3b4252',
+                    '--surface-light': '#434c5e', '--text': '#eceff4', '--text-dim': '#4c566a',
+                    '--text-muted': '#434c5e', '--accent': '#88c0d0', '--accent-bright': '#8fbcbb',
+                    '--green': '#a3be8c', '--green-bright': '#a3be8c', '--warm': '#d08770',
+                    '--cool': '#81a1c1', '--border': '#434c5e', '--border-light': '#4c566a',
                 }
             },
             dracula: {
-                label: 'Dracula',
-                dot: '#bd93f9',
+                label: 'dracula', swatch: '#bd93f9',
                 vars: {
-                    '--bg': '#282a36', '--bg-dark': '#21222c', '--surface': '#44475a',
-                    '--surface-bright': '#565970', '--text': '#f8f8f2', '--text-dim': '#6272a4',
-                    '--subtext': '#505570', '--overlay': '#808090', '--blue': '#8be9fd',
-                    '--green': '#50fa7b', '--red': '#ff5555', '--mauve': '#bd93f9',
-                    '--peach': '#ffb86c', '--yellow': '#f1fa8c', '--teal': '#8be9fd',
-                    '--pink': '#ff79c6', '--lavender': '#bd93f9', '--border': '#44475a',
+                    '--bg': '#282a36', '--bg-deep': '#21222c', '--surface': '#44475a',
+                    '--surface-light': '#565970', '--text': '#f8f8f2', '--text-dim': '#6272a4',
+                    '--text-muted': '#505570', '--accent': '#bd93f9', '--accent-bright': '#caa9fa',
+                    '--green': '#50fa7b', '--green-bright': '#50fa7b', '--warm': '#ffb86c',
+                    '--cool': '#8be9fd', '--border': '#44475a', '--border-light': '#6272a4',
                 }
             },
             gruvbox: {
-                label: 'Gruvbox',
-                dot: '#fabd2f',
+                label: 'gruvbox', swatch: '#fabd2f',
                 vars: {
-                    '--bg': '#282828', '--bg-dark': '#1d2021', '--surface': '#3c3836',
-                    '--surface-bright': '#504945', '--text': '#ebdbb2', '--text-dim': '#928374',
-                    '--subtext': '#665c54', '--overlay': '#a89984', '--blue': '#83a598',
-                    '--green': '#b8bb26', '--red': '#fb4934', '--mauve': '#d3869b',
-                    '--peach': '#fe8019', '--yellow': '#fabd2f', '--teal': '#8ec07c',
-                    '--pink': '#d3869b', '--lavender': '#83a598', '--border': '#504945',
+                    '--bg': '#282828', '--bg-deep': '#1d2021', '--surface': '#3c3836',
+                    '--surface-light': '#504945', '--text': '#ebdbb2', '--text-dim': '#928374',
+                    '--text-muted': '#665c54', '--accent': '#fabd2f', '--accent-bright': '#fabd2f',
+                    '--green': '#b8bb26', '--green-bright': '#b8bb26', '--warm': '#fe8019',
+                    '--cool': '#83a598', '--border': '#504945', '--border-light': '#665c54',
                 }
             },
             tokyo: {
-                label: 'Tokyo Night',
-                dot: '#7aa2f7',
+                label: 'tokyo', swatch: '#7aa2f7',
                 vars: {
-                    '--bg': '#1a1b26', '--bg-dark': '#16161e', '--surface': '#24283b',
-                    '--surface-bright': '#343b58', '--text': '#c0caf5', '--text-dim': '#565f89',
-                    '--subtext': '#414868', '--overlay': '#787c99', '--blue': '#7aa2f7',
-                    '--green': '#9ece6a', '--red': '#f7768e', '--mauve': '#bb9af7',
-                    '--peach': '#ff9e64', '--yellow': '#e0af68', '--teal': '#73daca',
-                    '--pink': '#f7768e', '--lavender': '#7aa2f7', '--border': '#343b58',
-                }
-            },
-            solarized: {
-                label: 'Solarized Dark',
-                dot: '#268bd2',
-                vars: {
-                    '--bg': '#002b36', '--bg-dark': '#001e27', '--surface': '#073642',
-                    '--surface-bright': '#0a4554', '--text': '#839496', '--text-dim': '#586e75',
-                    '--subtext': '#4a6068', '--overlay': '#93a1a1', '--blue': '#268bd2',
-                    '--green': '#859900', '--red': '#dc322f', '--mauve': '#6c71c4',
-                    '--peach': '#cb4b16', '--yellow': '#b58900', '--teal': '#2aa198',
-                    '--pink': '#d33682', '--lavender': '#268bd2', '--border': '#073642',
+                    '--bg': '#1a1b26', '--bg-deep': '#16161e', '--surface': '#24283b',
+                    '--surface-light': '#343b58', '--text': '#c0caf5', '--text-dim': '#565f89',
+                    '--text-muted': '#414868', '--accent': '#7aa2f7', '--accent-bright': '#7aa2f7',
+                    '--green': '#9ece6a', '--green-bright': '#9ece6a', '--warm': '#ff9e64',
+                    '--cool': '#7dcfff', '--border': '#343b58', '--border-light': '#565f89',
                 }
             },
         };
@@ -550,10 +410,14 @@
         const voiceList = document.getElementById('voiceList');
         const nameInput = document.getElementById('nameInput');
         const themeList = document.getElementById('themeList');
-        const topbarName = document.getElementById('topbarName');
-        const topbarVoice = document.getElementById('topbarVoice');
-        const topbarConfig = document.getElementById('topbarConfig');
+        const asciiArea = document.getElementById('asciiArea');
+        const sbMode = document.getElementById('sbMode');
+        const sbName = document.getElementById('sbName');
+        const sbVoice = document.getElementById('sbVoice');
+        const sbConfig = document.getElementById('sbConfig');
+        const sbState = document.getElementById('sbState');
         const cfgLang = document.getElementById('cfgLang');
+        const cfgGlyph = document.getElementById('cfgGlyph');
         const cfgSteps = document.getElementById('cfgSteps');
         const cfgSpeed = document.getElementById('cfgSpeed');
         const cfgTextSpeed = document.getElementById('cfgTextSpeed');
@@ -565,9 +429,236 @@
         let voices = {};
         let cfg = {};
         let textSpeed = 20;
-        let assistantName = 'JARVIS';
-        let currentAudio = null;
-        let currentWave = null;
+        let assistantName = 'jarvis';
+        let asciiInterval = null;
+
+        // GLYPH MOTION - Living ASCII Art
+        // Braille patterns + unicode glyphs for smooth organic motion
+
+        const ASCII_IDLE_FRAMES = [
+`        ·   ·     ·   ·
+     ·       ◌       ·
+   ·    ·  ◌ ◌  ·    ·
+  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
+   ·    ·  ◌ ◌  ·    ·
+     ·       ◌       ·
+        ·   ·     ·   ·`,
+`        ·   ·     ·   ·
+     ·       ·       ·
+   ·    ·  ◌ ◌  ·    ·
+  ·  ◌  · ◌ ◌◌◌ ·  ◌  ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+  ·  ◌  · ◌◌◌ ◌ ·  ◌  ·
+   ·    ·  ◌ ◌  ·    ·
+     ·       ·       ·
+        ·   ·     ·   ·`,
+`        ·   ·     ·   ·
+     ·       ·       ·
+   ·    ·  · ·  ·    ·
+  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+  ·  ◌  · ◌◌◌◌◌ ·  ◌  ·
+   ·    ·  · ·  ·    ·
+     ·       ·       ·
+        ·   ·     ·   ·`,
+`        ·   ·     ·   ·
+     ·       ·       ·
+   ·    ·  · ·  ·    ·
+  ·  ·  · ◌ ◌◌◌ ·  ·  ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+  ·  ·  · ◌◌◌ ◌ ·  ·  ·
+   ·    ·  · ·  ·    ·
+     ·       ·       ·
+        ·   ·     ·   ·`,
+`        ·   ·     ·   ·
+     ·       ·       ·
+   ·    ·  · ·  ·    ·
+  ·  ·  · ◌ ◌◌◌ ·  ·  ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+  ·  ·  · ◌ ◌◌◌ ·  ·  ·
+   ·    ·  · ·  ·    ·
+     ·       ·       ·
+        ·   ·     ·   ·`,
+`        ·   ·     ·   ·
+     ·       ·       ·
+   ·    ·  · ·  ·    ·
+  ·  ·  · ◌◌◌ ◌ ·  ·  ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ · ◌◌◌ ◌◌◌  ◌  ◌◌◌ ◌◌◌ ·
+ · ◌  ◌  ◌  ◌  ◌  ◌  ◌ ·
+ ·  · ◌◌ ◌ ◌◌ ◌ ◌◌ ·  ·
+  ·  ·  · ◌◌◌◌◌ ·  ·  ·
+   ·    ·  · ·  ·    ·
+     ·       ·       ·
+        ·   ·     ·   ·`,
+        ];
+
+        const ASCII_THINKING_FRAMES = [
+`    ╭────────────────────╮
+    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
+    │  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁ │
+    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
+    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
+    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
+    │  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁ │
+    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
+    ╰────────────────────╯
+    ╰──┬────┬────┬────┬─╯
+       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
+       ╰────┴────┴────╯`,
+`    ╭────────────────────╮
+    │  ⠂  ⠄  ⠈  ⠐  ⠁  │
+    │ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  │
+    │  ⠄  ⠈  ⠐  ⠁  ⠂  │
+    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
+    │  ⠄  ⠈  ⠐  ⠁  ⠂  │
+    │ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  │
+    │  ⠂  ⠄  ⠈  ⠐  ⠁  │
+    ╰────────────────────╯
+    ╰──┬────┬────┬────┬─╯
+       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
+       ╰────┴────┴────╯`,
+`    ╭────────────────────╮
+    │ ⠄  ⠈  ⠐  ⠁  ⠂  │
+    │ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  ⠄ │
+    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
+    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
+    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
+    │ ⠁⠁⠁ ⠂  ⠄ ⠁⠁  ⠄ │
+    │ ⠄  ⠈  ⠐  ⠁  ⠂  │
+    ╰────────────────────╯
+    ╰──┬────┬────┬────┬─╯
+       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
+       ╰────┴────┴────╯`,
+`    ╭────────────────────╮
+    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
+    │⠁⠁ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁ │
+    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
+    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
+    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
+    │⠁⠁ ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁ │
+    │ ⠈  ⠐  ⠁  ⠂  ⠄  │
+    ╰────────────────────╯
+    ╰──┬────┬────┬────┬─╯
+       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
+       ╰────┴────┴────╯`,
+`    ╭────────────────────╮
+    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
+    │ ⠄ ⠁⠁  ⠄ ⠁⠁⠁ ⠂  │
+    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
+    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
+    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
+    │ ⠄ ⠁⠁  ⠄ ⠁⠁⠁ ⠂  │
+    │ ⠐  ⠁  ⠂  ⠄  ⠈  │
+    ╰────────────────────╯
+    ╰──┬────┬────┬────┬─╯
+       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
+       ╰────┴────┴────╯`,
+`    ╭────────────────────╮
+    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
+    │⠁  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁│
+    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
+    │ ⠈⠈⠈ ⠄⠄⠄ ⠈⠈⠈ ⠂ │
+    │ ⠂  ⠄  ⠈  ⠐  ⠁  │
+    │⠁  ⠄ ⠁⠁⠁ ⠂  ⠄ ⠁⠁│
+    │ ⠁  ⠂  ⠄  ⠈  ⠐  │
+    ╰────────────────────╯
+    ╰──┬────┬────┬────┬─╯
+       │⠄⠄⠄│⠄⠄⠄│⠄⠄⠄│
+       ╰────┴────┴────╯`,
+        ];
+
+        const ASCII_TALKING_FRAMES = [
+`         ╭──────────────╮
+      ╭──┤  ⠁  ⠂  ⠄  ├──╮
+     │   ╰──────────────╯   │
+    │  ╭────────────────╮  │
+    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
+    │  │ ░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
+    │  ╰────────────────╯  │
+     │   ╭──────────────╮   │
+      ╰──┤  ⠁  ⠂  ⠄  ├──╯
+         ╰──────────────╯`,
+`         ╭──────────────╮
+      ╭──┤  ⠂  ⠄  ⠈  ├──╮
+     │   ╰──────────────╯   │
+    │  ╭────────────────╮  │
+    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  │░░▒▒▒▓▓▓▓▓▓▓▒▒▒│  │
+    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  ╰────────────────╯  │
+     │   ╭──────────────╮   │
+      ╰──┤  ⠂  ⠄  ⠈  ├──╯
+         ╰──────────────╯`,
+`         ╭──────────────╮
+      ╭──┤  ⠄  ⠈  ⠐  ├──╮
+     │   ╰──────────────╯   │
+    │  ╭────────────────╮  │
+    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
+    │  │ ░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
+    │  ╰────────────────╯  │
+     │   ╭──────────────╮   │
+      ╰──┤  ⠄  ⠈  ⠐  ├──╯
+         ╰──────────────╯`,
+`         ╭──────────────╮
+      ╭──┤  ⠈  ⠐  ⠁  ├──╮
+     │   ╰──────────────╯   │
+    │  ╭────────────────╮  │
+    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  │░░▒▒▒▓▓▓▓▓▓▓▒▒▒│  │
+    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  ╰────────────────╯  │
+     │   ╭──────────────╮   │
+      ╰──┤  ⠈  ⠐  ⠁  ├──╯
+         ╰──────────────╯`,
+`         ╭──────────────╮
+      ╭──┤  ⠐  ⠁  ⠂  ├──╮
+     │   ╰──────────────╯   │
+    │  ╭────────────────╮  │
+    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
+    │  │ ░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  │ ░░░▒▒▒▓▓▓▒▒▒░ │  │
+    │  ╰────────────────╯  │
+     │   ╭──────────────╮   │
+      ╰──┤  ⠐  ⠁  ⠂  ├──╯
+         ╰──────────────╯`,
+`         ╭──────────────╮
+      ╭──┤  ⠁  ⠂  ⠄  ├──╮
+     │   ╰──────────────╯   │
+    │  ╭────────────────╮  │
+    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  │░░▒▒▒▓▓▓▓▓▓▓▒▒▒│  │
+    │  │░░░▒▒▒▓▓▓▓▓▒▒▒░│  │
+    │  ╰────────────────╯  │
+     │   ╭──────────────╮   │
+      ╰──┤  ⠁  ⠂  ⠄  ├──╯
+         ╰──────────────╯`,
+        ];
 
         function time() { return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }); }
         function scroll() { messages.scrollTop = messages.scrollHeight; }
@@ -585,10 +676,63 @@
             themeStyle.textContent = `:root { ${css} }`;
         }
 
-        function updateTopbar() {
-            topbarName.textContent = assistantName;
-            topbarVoice.textContent = cfg.voice;
-            topbarConfig.textContent = `steps:${cfg.steps} speed:${cfg.speed}`;
+        function updateStatusbar() {
+            sbName.textContent = assistantName;
+            sbVoice.textContent = cfg.voice;
+            sbConfig.textContent = `${cfg.steps}·${cfg.speed}`;
+        }
+
+        function toggleGlyph() {
+            cfg.show_glyph = !cfg.show_glyph;
+            applyGlyphState();
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ show_glyph: cfg.show_glyph })
+            });
+        }
+
+        function applyGlyphState() {
+            const area = document.getElementById('asciiArea');
+            if (cfg.show_glyph) {
+                area.classList.remove('hidden');
+                cfgGlyph.textContent = 'on';
+            } else {
+                area.classList.add('hidden');
+                cfgGlyph.textContent = 'off';
+                stopAscii();
+            }
+        }
+
+        function startAscii(type) {
+            stopAscii();
+
+            const frames = type === 'idle' ? ASCII_IDLE_FRAMES :
+                           type === 'thinking' ? ASCII_THINKING_FRAMES :
+                           ASCII_TALKING_FRAMES;
+
+            const art = document.createElement('pre');
+            art.className = 'ascii-art ' + type;
+            asciiArea.innerHTML = '';
+            asciiArea.appendChild(art);
+
+            const label = document.createElement('span');
+            label.className = 'ascii-label';
+            label.textContent = type;
+            asciiArea.appendChild(label);
+
+            let i = 0;
+            function render() {
+                art.textContent = frames[i % frames.length];
+                i++;
+            }
+            render();
+            const speed = type === 'talking' ? 100 : type === 'thinking' ? 200 : 400;
+            asciiInterval = setInterval(render, speed);
+        }
+
+        function stopAscii() {
+            if (asciiInterval) { clearInterval(asciiInterval); asciiInterval = null; }
         }
 
         function renderVoices() {
@@ -608,11 +752,9 @@
 
                 const descRow = document.createElement('div');
                 descRow.className = 'voice-desc-row';
-
                 const descEl = document.createElement('span');
                 descEl.className = 'voice-desc';
                 descEl.textContent = v.desc;
-
                 const editBtn = document.createElement('button');
                 editBtn.className = 'voice-edit';
                 editBtn.textContent = 'edit';
@@ -630,15 +772,12 @@
         function startEditDesc(id, row, descEl, current) {
             const existing = row.querySelector('.voice-desc-input');
             if (existing) return;
-
             const inp = document.createElement('input');
             inp.className = 'voice-desc-input';
             inp.value = current;
-
             descEl.replaceWith(inp);
             inp.focus();
             inp.select();
-
             const save = () => {
                 const val = inp.value.trim() || current;
                 voices[id].desc = val;
@@ -649,7 +788,6 @@
                 });
                 renderVoices();
             };
-
             inp.addEventListener('blur', save);
             inp.addEventListener('keydown', e => {
                 if (e.key === 'Enter') inp.blur();
@@ -662,7 +800,7 @@
             for (const [id, t] of Object.entries(THEMES)) {
                 const item = document.createElement('div');
                 item.className = 'theme-item' + (id === cfg.theme ? ' active' : '');
-                item.innerHTML = `<span class="theme-dot" style="background:${t.dot}"></span><span>${t.label}</span>`;
+                item.innerHTML = `<span class="theme-swatch" style="background:${t.swatch}"></span><span>${t.label}</span>`;
                 item.addEventListener('click', () => setTheme(id));
                 themeList.appendChild(item);
             }
@@ -686,7 +824,7 @@
                 body: JSON.stringify({ voice: id })
             });
             await loadConfig();
-            addSys(`voice → ${id} (${voices[id].name})`);
+            addSys(`voice → ${id}`);
         }
 
         async function loadConfig() {
@@ -696,31 +834,33 @@
             cfg = { ...data };
             delete cfg.voices;
 
-            assistantName = cfg.name || 'JARVIS';
+            assistantName = (cfg.name || 'jarvis').toLowerCase();
             textSpeed = cfg.text_speed || 20;
 
-            nameInput.value = assistantName;
+            nameInput.value = cfg.name || 'jarvis';
             cfgLang.value = cfg.lang;
             cfgSteps.value = cfg.steps;
             cfgSpeed.value = cfg.speed;
             cfgTextSpeed.value = textSpeed;
 
-            applyTheme(cfg.theme || 'catppuccin');
-            updateTopbar();
+            applyTheme(cfg.theme || 'wabisabi');
+            updateStatusbar();
+            applyGlyphState();
             renderVoices();
             renderThemes();
         }
 
         nameInput.addEventListener('blur', async () => {
             const name = nameInput.value.trim();
-            if (!name || name === assistantName) { nameInput.value = assistantName; return; }
+            if (!name || name.toLowerCase() === assistantName) { nameInput.value = cfg.name || 'jarvis'; return; }
             await fetch('/api/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
             });
-            assistantName = name;
-            updateTopbar();
+            assistantName = name.toLowerCase();
+            cfg.name = name;
+            updateStatusbar();
             addSys(`name → ${name}`);
         });
 
@@ -739,35 +879,33 @@
                 body: JSON.stringify({ lang: cfgLang.value, steps, speed, text_speed: tSpeed })
             });
             await loadConfig();
-            addSys('config saved');
+            addSys('saved');
         });
 
         btnReset.addEventListener('click', async () => {
             await fetch('/api/config/reset', { method: 'POST' });
             await loadConfig();
-            addSys('config reset');
+            addSys('reset');
         });
 
-        // Auto-expand textarea
         input.addEventListener('input', () => {
             input.style.height = 'auto';
-            input.style.height = Math.min(input.scrollHeight, 200) + 'px';
+            input.style.height = Math.min(input.scrollHeight, 160) + 'px';
         });
 
         async function boot() {
             await loadConfig();
+            if (cfg.show_glyph) startAscii('idle');
 
             const lines = [
-                { t: `  ${assistantName} tts v1.0`, c: 'boot-info', d: 60 },
-                { t: `  voice: ${cfg.voice} (${voices[cfg.voice].name})`, c: '', d: 100 },
-                { t: `  steps: ${cfg.steps}  speed: ${cfg.speed}  text: ${textSpeed}ms`, c: '', d: 100 },
-                { t: `  theme: ${cfg.theme || 'catppuccin'}`, c: '', d: 80 },
-                { t: '', c: '', d: 60 },
-                { t: `  ready. type a message to begin.`, c: 'boot-ok', d: 150 },
+                { t: `  ${cfg.name || 'jarvis'} · supertonic 3`, c: 'boot-info' },
+                { t: `  voice:${cfg.voice} steps:${cfg.steps} speed:${cfg.speed}`, c: '' },
+                { t: '', c: '' },
+                { t: `  ready`, c: 'boot-ok' },
             ];
 
             for (const l of lines) {
-                await new Promise(r => setTimeout(r, l.d));
+                await new Promise(r => setTimeout(r, 120));
                 const line = document.createElement('div');
                 line.className = `boot-line ${l.c}`;
                 line.textContent = l.t;
@@ -820,103 +958,31 @@
                         scroll();
                         setTimeout(type, textSpeed + Math.random() * (textSpeed * 0.5));
                     } else {
-                        setTimeout(() => { cur.remove(); resolve(); }, 300);
+                        setTimeout(() => { cur.remove(); resolve(); }, 200);
                     }
                 }
                 type();
             });
         }
 
-        async function showThinking() {
-            const m = document.createElement('div');
-            m.className = 'msg';
-            m.id = 'thinking';
-            m.innerHTML = `
-                <div class="msg-header">
-                    <span class="msg-role role-ai">${assistantName.toLowerCase()}</span>
-                    <span class="msg-time">${time()}</span>
-                </div>
-                <div class="thinking">
-                    <div class="thinking-line">
-                        <div class="thinking-spinner"><span></span><span></span><span></span></div>
-                        <span>synthesizing...</span>
-                    </div>
-                    <div id="log"></div>
-                </div>
-            `;
-            messages.appendChild(m);
-            scroll();
-
-            const logs = [
-                { t: `  voice: ${cfg.voice}  steps: ${cfg.steps}  speed: ${cfg.speed}`, c: 'log-info', d: 150 },
-                { t: '  encoding → diffusion → waveform', c: 'log-info', d: 300 },
-                { t: '  ✓ audio ready', c: 'log-ok', d: 100 },
-            ];
-
-            const logEl = document.getElementById('log');
-            for (const l of logs) {
-                await new Promise(r => setTimeout(r, l.d));
-                const line = document.createElement('div');
-                line.className = `log-line ${l.c}`;
-                line.textContent = l.t;
-                logEl.appendChild(line);
-                scroll();
-            }
-        }
-
-        function removeThinking() {
-            const el = document.getElementById('thinking');
-            if (el) el.remove();
-        }
-
-        function wave() {
-            const w = document.createElement('span');
-            w.className = 'wave playing';
-            for (let i = 0; i < 7; i++) {
-                const b = document.createElement('i');
-                w.appendChild(b);
-            }
-            return w;
-        }
-
-        function audioControls(audio, waveEl) {
+        function audioControls(audio) {
             const ctrls = document.createElement('span');
-            ctrls.className = 'audio-controls';
+            ctrls.className = 'audio-ctrl';
 
             const playBtn = document.createElement('button');
             playBtn.className = 'audio-btn';
             playBtn.textContent = '▶';
-            playBtn.title = 'play';
+            playBtn.addEventListener('click', () => { audio.play(); });
 
             const pauseBtn = document.createElement('button');
             pauseBtn.className = 'audio-btn';
             pauseBtn.textContent = '❚❚';
-            pauseBtn.title = 'pause';
+            pauseBtn.addEventListener('click', () => { audio.pause(); });
 
             const stopBtn = document.createElement('button');
             stopBtn.className = 'audio-btn';
             stopBtn.textContent = '■';
-            stopBtn.title = 'stop';
-
-            playBtn.addEventListener('click', () => {
-                audio.play();
-                waveEl.classList.replace('paused', 'playing');
-            });
-
-            pauseBtn.addEventListener('click', () => {
-                audio.pause();
-                waveEl.classList.replace('playing', 'paused');
-            });
-
-            stopBtn.addEventListener('click', () => {
-                audio.pause();
-                audio.currentTime = 0;
-                waveEl.classList.replace('playing', 'paused');
-            });
-
-            audio.onended = () => {
-                waveEl.classList.replace('playing', 'paused');
-            };
+            stopBtn.addEventListener('click', () => { audio.pause(); audio.currentTime = 0; });
 
             ctrls.appendChild(playBtn);
             ctrls.appendChild(pauseBtn);
@@ -931,12 +997,42 @@
             busy = true;
             input.disabled = true;
             sendBtn.disabled = true;
-            hint.textContent = 'processing...';
+            hint.textContent = '...';
+            sbMode.textContent = 'processing';
+            sbState.textContent = 'thinking';
+            if (cfg.show_glyph) startAscii('thinking');
 
             addUser(text);
             input.value = '';
             input.style.height = 'auto';
-            await showThinking();
+
+            const thinkMsg = document.createElement('div');
+            thinkMsg.className = 'msg';
+            thinkMsg.id = 'thinking';
+            thinkMsg.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-role role-ai">${assistantName}</span>
+                    <span class="msg-time">${time()}</span>
+                </div>
+                <div class="thinking-inline" id="thinkLog"></div>
+            `;
+            messages.appendChild(thinkMsg);
+            scroll();
+
+            const logs = [
+                { t: `voice:${cfg.voice} steps:${cfg.steps}`, c: 'log-info', d: 100 },
+                { t: 'synthesizing...', c: '', d: 200 },
+            ];
+
+            const logEl = document.getElementById('thinkLog');
+            for (const l of logs) {
+                await new Promise(r => setTimeout(r, l.d));
+                const line = document.createElement('span');
+                line.className = l.c;
+                line.textContent = l.t + '  ';
+                logEl.appendChild(line);
+                scroll();
+            }
 
             try {
                 const res = await fetch('/api/synthesize', {
@@ -947,21 +1043,25 @@
                 const data = await res.json();
 
                 if (data.error) {
-                    removeThinking();
+                    thinkMsg.remove();
                     addSys(`error: ${data.error}`);
                     return;
                 }
 
-                removeThinking();
+                thinkMsg.remove();
 
                 const audio = new Audio(data.audio);
                 audio.play();
+
+                sbMode.textContent = 'speaking';
+                sbState.textContent = 'talking';
+                if (cfg.show_glyph) startAscii('talking');
 
                 const m = document.createElement('div');
                 m.className = 'msg';
                 m.innerHTML = `
                     <div class="msg-header">
-                        <span class="msg-role role-ai">${assistantName.toLowerCase()}</span>
+                        <span class="msg-role role-ai">${assistantName}</span>
                         <span class="msg-time">${time()}</span>
                         <span class="badge">${data.duration.toFixed(1)}s</span>
                     </div>
@@ -971,31 +1071,31 @@
                 scroll();
 
                 const body = m.querySelector('.msg-body');
-                const w = wave();
-                const ctrls = audioControls(audio, w);
-                body.appendChild(w);
+                const ctrls = audioControls(audio);
                 body.appendChild(ctrls);
+                audio.onended = () => {
+                    sbMode.textContent = 'normal';
+                    sbState.textContent = 'idle';
+                    if (cfg.show_glyph) startAscii('idle');
+                };
 
                 typeText(body, text);
 
             } catch (err) {
-                removeThinking();
+                thinkMsg.remove();
                 addSys(`error: ${err.message}`);
             } finally {
                 busy = false;
                 input.disabled = false;
                 sendBtn.disabled = false;
-                hint.textContent = 'enter to send';
+                hint.textContent = 'enter';
                 input.focus();
             }
         }
 
         sendBtn.addEventListener('click', send);
         input.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-            }
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
         });
 
         boot();
